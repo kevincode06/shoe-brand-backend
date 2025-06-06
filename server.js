@@ -9,8 +9,28 @@ const userRoutes = require('./routes/userRoutes'); // Optional
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Replace this:
+  // app.use(cors());
+
+// With this:
+const allowedOrigins = [
+  'https://your-frontend-domain.vercel.app', // <-- replace with your actual deployed frontend URL
+  'http://localhost:3000',                   // for local React dev server
+];
+
+app.use(cors({
+  origin: function(origin, callback){
+    // allow requests with no origin (like curl or Postman)
+    if(!origin) return callback(null, true);
+    if(allowedOrigins.indexOf(origin) === -1){
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,  // if you use cookies or authentication
+}));
+
 app.use(express.json());
 
 // DB Connection
@@ -30,4 +50,4 @@ app.use('/api/users', userRoutes);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
-
+module.exports = app;
