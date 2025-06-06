@@ -9,26 +9,24 @@ const userRoutes = require('./routes/userRoutes'); // Optional
 
 const app = express();
 
-// Replace this:
-  // app.use(cors());
-
-// With this:
+// Define allowed origins for CORS
 const allowedOrigins = [
-  'https://your-frontend-domain.vercel.app', // <-- replace with your actual deployed frontend URL
-  'http://localhost:3000',                   // for local React dev server
+  'https://shoe-brand-frontend.vercel.app', // Your actual deployed frontend URL
+  'http://localhost:3000',                   // React dev server
 ];
 
+// CORS middleware with whitelist
 app.use(cors({
-  origin: function(origin, callback){
-    // allow requests with no origin (like curl or Postman)
-    if(!origin) return callback(null, true);
-    if(allowedOrigins.indexOf(origin) === -1){
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like Postman or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     }
     return callback(null, true);
   },
-  credentials: true,  // if you use cookies or authentication
+  credentials: true, // Allow cookies/auth headers if needed
 }));
 
 app.use(express.json());
@@ -36,7 +34,7 @@ app.use(express.json());
 // DB Connection
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 })
   .then(() => console.log('✅ MongoDB connected'))
   .catch((err) => console.error('❌ MongoDB connection error:', err));
