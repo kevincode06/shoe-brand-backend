@@ -4,15 +4,16 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const authRoutes = require('./routes/authRoutes');
-const shoeRoutes = require('./routes/shoeRoutes'); // Optional
-const userRoutes = require('./routes/userRoutes'); // Optional
+const shoeRoutes = require('./routes/shoeRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
 // Define allowed origins for CORS
 const allowedOrigins = [
-  'https://shoe-brand-frontend.vercel.app', // Your actual deployed frontend URL
-  'http://localhost:3000',                   // React dev server
+  'https://shoe-brand-frontend.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5000'
 ];
 
 // CORS middleware with whitelist
@@ -26,10 +27,28 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true, // Allow cookies/auth headers if needed
+  credentials: true,
 }));
 
 app.use(express.json());
+
+// Health check endpoint - ADD THIS
+app.get('/api', (req, res) => {
+  res.json({ 
+    message: 'Shoe Brand API is running!', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Health check for root
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Shoe Brand Backend Server', 
+    status: 'active',
+    apiEndpoint: '/api'
+  });
+});
 
 // DB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -44,8 +63,29 @@ app.use('/api/auth', authRoutes);
 app.use('/api/shoes', shoeRoutes);
 app.use('/api/users', userRoutes);
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Error:', err.message);
+  res.status(500).json({ 
+    error: 'Something went wrong!', 
+    message: err.message 
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    error: 'Route not found',
+    requestedPath: req.originalUrl
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 CORS enabled for: ${allowedOrigins.join(', ')}`);
+});
 
 module.exports = app;
